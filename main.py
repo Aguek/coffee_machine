@@ -18,14 +18,18 @@ def play_game():
         return f"Water: {water}ml\nMilk: {milk}ml:\nCoffee: {coffee}g.\nMoney: ${money}"
 
     # TODO 3: Get the details of the coffee the customer wants
-    def type_of_coffee(coffee_type):
-        return MENU[coffee_type]
+    # def type_of_coffee(coffee_type):
+    #     return MENU[coffee_type]
 
-    latte = type_of_coffee("latte")
-    espresso = type_of_coffee("espresso")
-    cappuccino = type_of_coffee("cappuccino")
+    # latte = type_of_coffee("latte")
+    # espresso = type_of_coffee("espresso")
+    # cappuccino = type_of_coffee("cappuccino")
 
-    def calculate_money(coffee, milk, water, cost, coffee_type, current_balance):
+    def calculate_money(coffee_quantity, milk, water, cost, coffee_type):
+        """
+        This function asks the user for the money, and the calculates the total, and does computation for the
+        resources left :param coffee: :param milk: :param water: :param cost: :param coffee_type: :return: total_money
+        """
         quarters = float(input("How many quarters?"))
         dimes = float(input("How many dimes?"))
         nickles = float(input("How many nickles?"))
@@ -35,63 +39,56 @@ def play_game():
         if total_money < cost:
             print("Sorry that's not enough money. Money refunded.")
         else:
-            current_balance += total_money
-            resources["coffee"] -= coffee
-            resources["milk"] -= milk
+            resources["coffee"] -= coffee_quantity
+            if coffee_type != "espresso":
+                resources["milk"] -= milk
+            else:
+                # we deduct nothing from milk because espresso doesn't have milk
+                resources["milk"] -= 0
             resources["water"] -= water
             print(f"Here is ${change} in change.")
-            print(f"Here is your {coffee_type}, enjoy!!")
-        return current_balance
+            print(f"Here is your {coffee_type} ☕, enjoy!!")
+        return total_money
+
+    def is_resources_enough(coffee):
+        """This function gets the type of coffee, and gets the ingredients, checks to see if the ingredients are sufficient
+        if they are, gives you a coffee if you have money
+        """
+        water = MENU[coffee]["ingredients"]["water"]
+        # since espresso doesn't have milk, I set milk to "" for expresso
+        if coffee != "espresso":
+            milk = MENU[coffee]["ingredients"]["milk"]
+        else:
+            milk = ""
+        coffee_quantity = MENU[coffee]["ingredients"]["coffee"]
+        cost = MENU[coffee]["cost"]
+        # checking against items in the coffee ingredients against the resources available
+        for item in MENU[coffee]["ingredients"]:
+            if MENU[coffee]["ingredients"][item] > resources[item]:
+                print(f"Sorry, there is not enough {item}.")
+                # return false if the resources are not enough
+                return False
+            else:
+                if coffee == "espresso":
+                    calculate_money(coffee_quantity, 0, water, cost, coffee)
+                else:
+                    calculate_money(coffee_quantity, milk, water, cost, coffee)
+                # return false if the order has been made so that there is no loop
+                return False
 
     while should_refill:
         user_choice = input("What would you like? (espresso/latte/cappuccino):").lower()
-        if user_choice == "report":
-            print(report())
-        elif user_choice == "latte":
-            l_water = latte["ingredients"]["water"]
-            l_milk = latte["ingredients"]["milk"]
-            l_coffee = latte["ingredients"]["coffee"]
-            l_cost = latte["cost"]
-            if resources["water"] >= l_water and resources["milk"] >= l_milk and resources["coffee"] >= l_coffee:
-                print("Please insert coins")
-                calculate_money(l_coffee, l_milk, l_water, l_cost, "Latte", money)
-            elif resources["water"] < l_water:
-                print("Sorry, there is not enough water.")
-            elif resources["coffee"] < l_coffee:
-                print("Sorry, there is not enough coffee.")
-            else:
-                print("Sorry, there is not enough milk.")
 
-        elif user_choice == "espresso":
-            e_water = espresso["ingredients"]["water"]
-            e_coffee = espresso["ingredients"]["coffee"]
-            e_cost = espresso["cost"]
-            if resources["water"] >= e_water and resources["coffee"] >= e_coffee:
-                print("Please insert coins")
-                calculate_money(e_coffee, 0, e_water, e_cost, "Espresso", money)
-            elif resources["water"] < e_water:
-                print("Sorry, there is not enough water.")
-            else:
-                print("Sorry, there is not enough coffee.")
-
-        elif user_choice == "cappuccino":
-            c_water = cappuccino["ingredients"]["water"]
-            c_milk = cappuccino["ingredients"]["milk"]
-            c_coffee = cappuccino["ingredients"]["coffee"]
-            c_cost = cappuccino["cost"]
-            if resources["water"] >= c_water and resources["coffee"] >= c_coffee and resources["milk"] >= c_milk:
-                print("Please insert coins")
-                calculate_money(c_coffee, c_milk, c_water, c_cost, "Cappuccino", money)
-            elif resources["water"] < c_water:
-                print("Sorry, there is not enough water.")
-            elif resources["coffee"] < c_coffee:
-                print("Sorry, there is not enough coffee.")
-            else:
-                print("Sorry, there is not enough milk.")
-        else:
+        if user_choice == "off":
             should_refill = False
-            print("Unable to process coffee.")
+        elif user_choice == "report":
+            print(report())
+        else:
+            is_resources_enough(user_choice)
+
     # TODO 4: check if there are enough resources for the user's drink
+
+    # TODO 5: Make sure the program asks the user for the coffee everytime
 
 
 play_game()
